@@ -19,7 +19,7 @@ hotkey_listener = None
 config_path = os.path.join(os.path.expanduser("~"), ".hebengconvert.json")
 
 def load_config():
-    default_config = {"hotkey": "<ctrl>+<alt>+d"}
+    default_config = {"hotkey": "<ctrl>+<alt>+d", "port": 54321}
     if os.path.exists(config_path):
         try:
             with open(config_path, "r") as f:
@@ -81,12 +81,12 @@ def setup_tray(hotkey_str):
     
     icon = pystray.Icon("HebEngConvert", image, "HebEngConvert", menu)
     
-    # Run in thread so notification doesn't block
     threading.Thread(target=icon.run, daemon=True).start()
     
-    # Startup notification with Hotkey
-    time.sleep(1.5) # Wait for icon to initialize
-    icon.notify(f"Press {hotkey_str} to open.", "HebEngConvert is Ready")
+    # Startup notification with Clean Hotkey (No <>)
+    display_hk = hotkey_str.replace("<", "").replace(">", "").upper()
+    time.sleep(1.5)
+    icon.notify(f"Press {display_hk} to open.", "HebEngConvert is Ready")
 
 def update_hotkey_listener(new_hotkey):
     global hotkey_listener
@@ -94,24 +94,32 @@ def update_hotkey_listener(new_hotkey):
         hotkey_listener.stop()
     
     try:
-        # Standardize format for GlobalHotKeys
         hk = new_hotkey.lower().strip()
-        # Ensure pynput notation: ctrl -> <ctrl>
         for key in ['ctrl', 'alt', 'shift', 'win', 'cmd']:
             if key in hk and f'<{key}>' not in hk:
                 hk = hk.replace(key, f'<{key}>')
-        # Replace spaces or commas with +
         hk = hk.replace(" ", "").replace(",", "+")
         
         hotkey_listener = keyboard.GlobalHotKeys({hk: show_clipboard})
         hotkey_listener.start()
-        
-        # PERSIST: Update config file immediately
-        config = load_config()
-        config["hotkey"] = new_hotkey
-        save_config(config)
     except Exception as e:
         print(f"Hotkey Error: {e}")
+
+def handle_settings_save(new_hotkey, new_port):
+    # Update config
+    config = load_config()
+    config["hotkey"] = new_hotkey
+    config["port"] = new_port
+    save_config(config)
+    
+    # Update hotkey listener on the fly
+    update_hotkey_listener(new_hotkey)
+    
+    # Note: Port changes require restart to take effect on the socket
+    # But we update the internal state for consistency
+    if app:
+        app.current_hotkey = new_hotkey
+        app.current_port = new_port
 
 def refresh_callback():
     try:
@@ -123,21 +131,62 @@ def refresh_callback():
     if app:
         app.update_content(content)
 
+import socket
+import threading
+
+# Single Instance Globals
+server_socket = None
+
+def check_single_instance(port):
+    global server_socket
+    try:
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Using SO_REUSEADDR isn't standard on Windows, just bind
+        server_socket.bind(('127.0.0.1', port))
+        server_socket.listen(5)
+        threading.Thread(target=listen_for_show_signals, args=(server_socket,), daemon=True).start()
+        return True
+    except socket.error:
+        try:
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client.connect(('127.0.0.1', port))
+            client.sendall(b"show")
+            client.close()
+        except:
+            pass
+        return False
+
+def listen_for_show_signals(sock):
+    while True:
+        try:
+            conn, addr = sock.accept()
+            data = conn.recv(1024)
+            if data == b"show":
+                show_clipboard()
+            conn.close()
+        except:
+            break
+
 if __name__ == "__main__":
     config = load_config()
     current_hotkey = config.get("hotkey", "<ctrl>+<alt>+d")
+    current_port = config.get("port", 54321)
     
+    if not check_single_instance(current_port):
+        sys.exit(0)
+        
     # 1. Initialize GUI
     app = ClipboardWindow(
         on_refresh_callback=refresh_callback,
         current_hotkey=current_hotkey,
-        on_hotkey_save=update_hotkey_listener
+        current_port=current_port,
+        on_settings_save=handle_settings_save
     )
     
     # 2. Start hotkey listener
     update_hotkey_listener(current_hotkey)
     
-    # 3. Start tray icon with active hotkey info
+    # 3. Start tray icon
     setup_tray(current_hotkey)
     
     # 4. Main thread runs the GUI
