@@ -23,15 +23,45 @@ class ClipboardWindow(ctk.CTk):
         self.textbox = ctk.CTkTextbox(self.main_frame, wrap="word", font=("Inter", 14))
         self.textbox.grid(row=0, column=0, padx=0, pady=(0, 10), sticky="nsew")
         
+        # Button frame
+        self.button_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.button_frame.grid(row=1, column=0, sticky="ew")
+        self.button_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
         # Refresh button
         self.refresh_button = ctk.CTkButton(
-            self.main_frame, 
-            text="Refresh Clipboard", 
+            self.button_frame, 
+            text="Refresh", 
             command=self.refresh_content,
             font=("Inter", 13, "bold"),
             height=35
         )
-        self.refresh_button.grid(row=1, column=0, sticky="ew")
+        self.refresh_button.grid(row=0, column=0, padx=(0, 5), sticky="ew")
+
+        # Convert to Hebrew button
+        from converter import convert_eng_to_heb, convert_heb_to_eng
+        self.convert_heb_button = ctk.CTkButton(
+            self.button_frame,
+            text="To Heb",
+            command=lambda: self.update_content(convert_eng_to_heb(self.textbox.get("0.0", "end-1c"))),
+            fg_color="#1f538d",
+            hover_color="#14375e",
+            font=("Inter", 13, "bold"),
+            height=35
+        )
+        self.convert_heb_button.grid(row=0, column=1, padx=5, sticky="ew")
+
+        # Convert to English button
+        self.convert_eng_button = ctk.CTkButton(
+            self.button_frame,
+            text="To Eng",
+            command=lambda: self.update_content(convert_heb_to_eng(self.textbox.get("0.0", "end-1c"))),
+            fg_color="#1f538d",
+            hover_color="#14375e",
+            font=("Inter", 13, "bold"),
+            height=35
+        )
+        self.convert_eng_button.grid(row=0, column=2, padx=(5, 0), sticky="ew")
         
         # Close handling (hide instead of destroy)
         self.protocol("WM_DELETE_WINDOW", self.hide)
@@ -43,6 +73,14 @@ class ClipboardWindow(ctk.CTk):
         self.textbox.configure(state="normal")
         self.textbox.delete("0.0", "end")
         self.textbox.insert("0.0", text)
+        
+        # Simple heuristic for RTL alignment
+        has_hebrew = any('\u0590' <= c <= '\u05FF' for c in text)
+        if has_hebrew:
+            self.textbox.configure(font=("Inter", 16)) # Larger font for Hebrew
+        else:
+            self.textbox.configure(font=("Inter", 14))
+
         self.textbox.configure(state="disabled")
         
     def refresh_content(self):
