@@ -44,9 +44,10 @@ def get_resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def on_tray_clicked(icon, item):
-    if str(item) == "Open":
+    text = str(item)
+    if text.startswith("Open"):
         show_clipboard()
-    elif str(item) == "Exit":
+    elif text == "Exit":
         exit_app()
 
 def show_clipboard():
@@ -74,9 +75,9 @@ def setup_tray(hotkey_str):
     icon_path = get_resource_path("assets/clipboard.png")
     image = Image.open(icon_path)
     
-    # Format clean hotkey for menu and notification
     clean_hk = hotkey_str.replace("<", "").replace(">", "").upper()
     
+    # Create the menu
     menu = pystray.Menu(
         pystray.MenuItem(f"Open ({clean_hk})", on_tray_clicked, default=True),
         pystray.MenuItem("Exit", on_tray_clicked)
@@ -84,6 +85,8 @@ def setup_tray(hotkey_str):
     
     icon = pystray.Icon("HebEngConvert", image, "HebEngConvert", menu)
     
+    # Ensure double-click/primary action is explicitly tied to Open
+    # icon.run() handles this via menu.default=True for Windows
     threading.Thread(target=icon.run, daemon=True).start()
     
     time.sleep(1.5)

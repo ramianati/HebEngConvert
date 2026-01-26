@@ -18,7 +18,7 @@ HebEngConvert is a modern, lightweight Windows utility designed to instantly con
 
 ## How to Use
 
-1. **Launch**: Run `main.exe`. You'll see a notification in the Windows Action Center and a purple clipboard icon in your tray.
+1. **Launch**: Run `HebEngConvert.exe`. You'll see a notification in the Windows Action Center and a purple clipboard icon in your tray.
 2. **Convert**: Simply copy any text to your clipboard and hit your global hotkey (Default: `CTRL+ALT+D`).
 3. **Copy Back**: Click the large purple clipboard icon next to the converted text to copy it back to your clipboard instantly.
 4. **Refresh**: Use the circular arrow icon in the bottom control row to pull the latest clipboard content manually.
@@ -41,6 +41,10 @@ Click the **Gear Icon** in the application window to open the settings dialog:
 
 - **OS**: Windows 10/11
 - **Standalone**: No installation required. Fully portable executable.
+
+## Disclaimer
+
+This software is provided "as is", without warranty of any kind, express or implied. By using this application, you agree that the author and AI creators are not responsible for any issues, data loss, or system conflicts that may arise. Always ensure the Hotkey and Instance Port do not conflict with other critical software on your machine.
 
 ---
 *Created by Antigravity AI.*
