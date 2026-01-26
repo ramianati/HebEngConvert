@@ -1,14 +1,33 @@
 import customtkinter as ctk
 import pyperclip
+import os
+import sys
+from PIL import Image
 from converter import convert_eng_to_heb, convert_heb_to_eng
+
+def get_resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class ClipboardWindow(ctk.CTk):
     def __init__(self, on_refresh_callback=None):
         super().__init__()
 
-        self.title("Hebrew-English Clipboard Converter")
-        self.geometry("600x550")
+        self.title("HebEngConvert")
+        self.geometry("300x320")
         self.on_refresh_callback = on_refresh_callback
+        
+        # Load copy icon
+        icon_path = get_resource_path("assets/copy.png")
+        self.copy_image = ctk.CTkImage(
+            light_image=Image.open(icon_path),
+            dark_image=Image.open(icon_path),
+            size=(20, 20)
+        )
         
         # Configure grid
         self.grid_rowconfigure(0, weight=1)
@@ -16,16 +35,13 @@ class ClipboardWindow(ctk.CTk):
 
         # Main frame
         self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.main_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
-        self.main_frame.grid_rowconfigure((1, 3), weight=1) # Text boxes areas
+        self.main_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.main_frame.grid_rowconfigure((0, 1), weight=1) 
         self.main_frame.grid_columnconfigure(0, weight=1)
 
         # --- Hebrew View Section ---
-        self.heb_label = ctk.CTkLabel(self.main_frame, text="Converted to Hebrew:", font=("Inter", 13, "bold"))
-        self.heb_label.grid(row=0, column=0, sticky="w", pady=(0, 5))
-        
         self.heb_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.heb_frame.grid(row=1, column=0, sticky="nsew", pady=(0, 15))
+        self.heb_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 5))
         self.heb_frame.grid_rowconfigure(0, weight=1)
         self.heb_frame.grid_columnconfigure(0, weight=1)
 
@@ -33,17 +49,14 @@ class ClipboardWindow(ctk.CTk):
         self.heb_textbox.grid(row=0, column=0, sticky="nsew")
         
         self.heb_copy_btn = ctk.CTkButton(
-            self.heb_frame, text="Copy", width=80, 
+            self.heb_frame, text="", image=self.copy_image, width=35, height=35,
             command=lambda: self.copy_to_clip(self.heb_textbox.get("0.0", "end-1c"))
         )
-        self.heb_copy_btn.grid(row=0, column=1, padx=(10, 0), sticky="ns")
+        self.heb_copy_btn.grid(row=0, column=1, padx=(5, 0), sticky="ns")
 
         # --- English View Section ---
-        self.eng_label = ctk.CTkLabel(self.main_frame, text="Converted to English:", font=("Inter", 13, "bold"))
-        self.eng_label.grid(row=2, column=0, sticky="w", pady=(0, 5))
-        
         self.eng_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.eng_frame.grid(row=3, column=0, sticky="nsew")
+        self.eng_frame.grid(row=1, column=0, sticky="nsew", pady=(5, 0))
         self.eng_frame.grid_rowconfigure(0, weight=1)
         self.eng_frame.grid_columnconfigure(0, weight=1)
 
@@ -51,17 +64,17 @@ class ClipboardWindow(ctk.CTk):
         self.eng_textbox.grid(row=0, column=0, sticky="nsew")
         
         self.eng_copy_btn = ctk.CTkButton(
-            self.eng_frame, text="Copy", width=80, 
+            self.eng_frame, text="", image=self.copy_image, width=35, height=35,
             command=lambda: self.copy_to_clip(self.eng_textbox.get("0.0", "end-1c"))
         )
-        self.eng_copy_btn.grid(row=0, column=1, padx=(10, 0), sticky="ns")
+        self.eng_copy_btn.grid(row=0, column=1, padx=(5, 0), sticky="ns")
 
         # --- Bottom Control Section ---
         self.refresh_button = ctk.CTkButton(
-            self.main_frame, text="Refresh from Clipboard", 
-            command=self.refresh_content, height=35, font=("Inter", 13, "bold")
+            self.main_frame, text="Refresh Clipboard", 
+            command=self.refresh_content, height=30, font=("Inter", 12, "bold")
         )
-        self.refresh_button.grid(row=4, column=0, pady=(20, 0), sticky="ew")
+        self.refresh_button.grid(row=2, column=0, pady=(10, 0), sticky="ew")
         
         # Close handling (hide instead of destroy)
         self.protocol("WM_DELETE_WINDOW", self.hide)

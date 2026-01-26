@@ -9,8 +9,9 @@ def convert_eng_to_heb(text):
         'z': 'ז', 'x': 'ס', 'c': 'ב', 'v': 'ה', 'b': 'נ', 'n': 'מ', 'm': 'צ', ',': 'ת', '.': 'ץ', '/': '.',
         # Uppercase
         'Q': '/', 'W': "'", 'E': 'ק', 'R': 'ר', 'T': 'א', 'Y': 'ט', 'U': 'ו', 'I': 'ן', 'O': 'ם', 'P': 'פ', '{': '}', '}': '{',
-        'A': 'ש', 'S': 'ד', 'D': 'ג', 'F': 'כ', 'G': 'ע', 'H': 'י', 'J': 'ח', 'K': 'ל', 'L': 'ך', ':': 'ף', '"': ',',
-        'Z': 'ז', 'X': 'ס', 'C': 'ב', 'V': 'ה', 'B': 'נ', 'N': 'מ', 'M': 'צ', '<': 'ת', '>': 'ץ', '?': '.',
+        'A': 'ש', 'S': 'ד', 'D': 'ג', 'F': 'כ', 'G': 'ע', 'H': 'י', 'J': 'ח', 'K': 'ל', 'L': 'ך', 
+        # Shifted symbols that stay same or follow layout
+        ':': ':', '"': '"', '<': '<', '>': '>', '?': '?',
         # Mirrored brackets
         '(': ')', ')': '(',
     }
@@ -38,8 +39,35 @@ def convert_heb_to_eng(text):
         converted += mapping.get(char, char)
     return converted
 
+def test_all_cases():
+    """ Runs a comprehensive suite of tests for the converter """
+    try:
+        import sys
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+    except:
+        pass
+
+    test_cases = [
+        # (Input, Expected Heb, Expected Eng)
+        ("akuo", "שלום", "שךואם"),
+        ("אקערטי", "אקערטי", "qwerty"),
+        ("123!@#", "123!@#", "123!@#"),
+        ("akuo kfuko' nv vgbhhbho?", "שלום לכולם, מה העניינים?", "שךואם ךכואם, מה העמיימים?"),
+        ("Punctuation: , . / ; ' [ ]", "פונבחואבהין: ת ץ . ף , ] [", "Punctuation: , . / ; ' [ ]"),
+        ("Hello, World!", "הללך, וךךקד!", "Hello, World!"),
+        ("Mirrored Brackets ( ) [ ]", "מיהיהקיהבד בקשבלעקד ) ( ] [", "Mirrored Brackets ( ) [ ]"),
+    ]
+    
+    print(f"{'Input':<30} | {'Output (To Heb)':<30} | {'Output (To Eng)':<30}")
+    print("-" * 100)
+    for inp, res_heb, _ in test_cases: # Simple iteration
+        res_heb = convert_eng_to_heb(inp)
+        res_eng = convert_heb_to_eng(inp)
+        try:
+            print(f"{inp:<30} | {res_heb:<30} | {res_eng:<30}")
+        except:
+            print(f"{inp:<30} | [Encoding Error] | [Encoding Error]")
+
 if __name__ == "__main__":
-    # Test
-    print(f"Eng to Heb: 'akuo' -> {convert_eng_to_heb('akuo')}")
-    print(f"Heb to Eng: 'שלום' -> {convert_heb_to_eng('שלום')}") # This is slightly wrong because of standard mapping, let's test specific chars
-    print(f"Heb to Eng: 'אקעם' -> {convert_heb_to_eng('אקעם')}") # Should be 't e g o'
+    test_all_cases()
