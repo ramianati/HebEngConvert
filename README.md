@@ -16,6 +16,10 @@ HebEngConvert is a modern, lightweight Windows utility designed to instantly con
 - **Sleek, Modern UI**: Built with `customtkinter`, featuring a high-contrast dark theme and vibrant blue/purple gradients.
 - **Single Instance Support**: Ensures only one copy of the app runs at a time (configurable via settings).
 
+## Screenshot
+
+![HebEngConvert Interface](screenshot.png)
+
 ## How to Use
 
 1. **Launch**: Run `HebEngConvert.exe`. You'll see a notification in the Windows Action Center and a purple clipboard icon in your tray.
