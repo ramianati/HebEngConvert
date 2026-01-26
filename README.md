@@ -37,6 +37,25 @@ Click the **Gear Icon** in the application window to open the settings dialog:
     - **Port Number**: You can change this port if it conflicts with other software on your machine.
 - **Persistence**: All settings are automatically saved to `.hebengconvert.json` in your user home directory.
 
+## Privacy & Security
+
+**100% Local & Private**
+- ✅ **No telemetry or analytics** - Zero network calls, no data collection
+- ✅ **Fully offline** - No internet connection required
+- ✅ **Open source** - All code is transparent and reviewable on GitHub
+
+**What the app accesses:**
+- 📋 **Clipboard** - Reads clipboard content when you open the window or press refresh
+- ⌨️ **Keyboard** - Listens for your custom global hotkey (default: Ctrl+Alt+D)
+- 💾 **Local storage** - Saves settings to `~/.hebengconvert.json` (hotkey, port, preferences)
+- 🖥️ **System tray** - Displays a tray icon for quick access
+
+**No access to:**
+- ❌ Network/Internet
+- ❌ File system (beyond its own config file)
+- ❌ Other applications
+- ❌ System processes
+
 ## Requirements
 
 - **OS**: Windows 10/11
