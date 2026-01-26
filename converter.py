@@ -16,10 +16,7 @@ def convert_eng_to_heb(text):
         '(': ')', ')': '(',
     }
     
-    converted = ""
-    for char in text:
-        converted += mapping.get(char, char)
-    return converted
+    return ''.join(mapping.get(char, char) for char in text)
 
 def convert_heb_to_eng(text):
     """
@@ -34,10 +31,7 @@ def convert_heb_to_eng(text):
         ')': '(', '(': ')',
     }
     
-    converted = ""
-    for char in text:
-        converted += mapping.get(char, char)
-    return converted
+    return ''.join(mapping.get(char, char) for char in text)
 
 def test_all_cases():
     """ Runs a comprehensive suite of tests for the converter """

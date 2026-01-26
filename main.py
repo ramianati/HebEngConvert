@@ -10,7 +10,6 @@ import time
 from pynput import keyboard
 
 import json
-from pynput import keyboard
 
 # Global app instance for single-instance control
 app = None
@@ -24,7 +23,7 @@ def load_config():
         try:
             with open(config_path, "r") as f:
                 return {**default_config, **json.load(f)}
-        except:
+        except (FileNotFoundError, json.JSONDecodeError, PermissionError):
             pass
     return default_config
 
@@ -32,14 +31,14 @@ def save_config(config):
     try:
         with open(config_path, "w") as f:
             json.dump(config, f)
-    except:
+    except (PermissionError, OSError):
         pass
 
 def get_resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
         base_path = sys._MEIPASS
-    except Exception:
+    except AttributeError:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
@@ -165,7 +164,7 @@ def check_single_instance(port, use_port):
             client.connect(('127.0.0.1', port))
             client.sendall(b"show")
             client.close()
-        except:
+        except (socket.error, ConnectionRefusedError):
             pass
         return False
 
@@ -177,7 +176,7 @@ def listen_for_show_signals(sock):
             if data == b"show":
                 show_clipboard()
             conn.close()
-        except:
+        except (socket.error, OSError):
             break
 
 if __name__ == "__main__":

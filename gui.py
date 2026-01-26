@@ -9,7 +9,7 @@ def get_resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
         base_path = sys._MEIPASS
-    except Exception:
+    except AttributeError:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
@@ -156,6 +156,11 @@ class SettingsDialog(ctk.CTkToplevel):
         if new_hotkey_raw and new_port:
             try:
                 port_int = int(new_port)
+                # Validate port range
+                if not (1024 <= port_int <= 65535):
+                    self.status_label.configure(text="Port must be 1024-65535", text_color="red")
+                    return
+                    
                 save_hk = new_hotkey_raw
                 for key in ['ctrl', 'alt', 'shift', 'win', 'cmd']:
                     if key in save_hk and f'<{key}>' not in save_hk:
@@ -272,11 +277,12 @@ class ClipboardWindow(ctk.CTk):
     def open_settings(self):
         SettingsDialog(self, self.current_hotkey, self.current_port, self.use_port, self._on_settings_applied)
 
-    def _on_settings_applied(self, new_hotkey, new_port):
+    def _on_settings_applied(self, new_hotkey, new_port, use_port):
         self.current_hotkey = new_hotkey
         self.current_port = new_port
+        self.use_port = use_port
         if self.on_settings_save:
-            self.on_settings_save(new_hotkey, new_port)
+            self.on_settings_save(new_hotkey, new_port, use_port)
 
     def copy_to_clip(self, text):
         pyperclip.copy(text)
