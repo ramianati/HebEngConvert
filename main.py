@@ -19,7 +19,7 @@ hotkey_listener = None
 config_path = os.path.join(os.path.expanduser("~"), ".hebengconvert.json")
 
 def load_config():
-    default_config = {"hotkey": "<ctrl>+<alt>+d", "port": 54321}
+    default_config = {"hotkey": "<ctrl>+<alt>+d", "port": 54321, "use_port": True}
     if os.path.exists(config_path):
         try:
             with open(config_path, "r") as f:
@@ -83,9 +83,8 @@ def setup_tray(hotkey_str):
     
     threading.Thread(target=icon.run, daemon=True).start()
     
-    # Startup notification with Clean Hotkey (No <>)
-    display_hk = hotkey_str.replace("<", "").replace(">", "").upper()
     time.sleep(1.5)
+    display_hk = hotkey_str.replace("<", "").replace(">", "").upper()
     icon.notify(f"Press {display_hk} to open.", "HebEngConvert is Ready")
 
 def update_hotkey_listener(new_hotkey):
@@ -105,21 +104,19 @@ def update_hotkey_listener(new_hotkey):
     except Exception as e:
         print(f"Hotkey Error: {e}")
 
-def handle_settings_save(new_hotkey, new_port):
-    # Update config
+def handle_settings_save(new_hotkey, new_port, use_port):
     config = load_config()
     config["hotkey"] = new_hotkey
     config["port"] = new_port
+    config["use_port"] = use_port
     save_config(config)
     
-    # Update hotkey listener on the fly
     update_hotkey_listener(new_hotkey)
     
-    # Note: Port changes require restart to take effect on the socket
-    # But we update the internal state for consistency
     if app:
         app.current_hotkey = new_hotkey
         app.current_port = new_port
+        app.use_port = use_port
 
 def refresh_callback():
     try:
@@ -134,14 +131,15 @@ def refresh_callback():
 import socket
 import threading
 
-# Single Instance Globals
 server_socket = None
 
-def check_single_instance(port):
+def check_single_instance(port, use_port):
+    if not use_port:
+        return True
+        
     global server_socket
     try:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # Using SO_REUSEADDR isn't standard on Windows, just bind
         server_socket.bind(('127.0.0.1', port))
         server_socket.listen(5)
         threading.Thread(target=listen_for_show_signals, args=(server_socket,), daemon=True).start()
@@ -171,15 +169,16 @@ if __name__ == "__main__":
     config = load_config()
     current_hotkey = config.get("hotkey", "<ctrl>+<alt>+d")
     current_port = config.get("port", 54321)
+    use_port = config.get("use_port", True)
     
-    if not check_single_instance(current_port):
+    if not check_single_instance(current_port, use_port):
         sys.exit(0)
         
-    # 1. Initialize GUI
     app = ClipboardWindow(
         on_refresh_callback=refresh_callback,
         current_hotkey=current_hotkey,
         current_port=current_port,
+        use_port=use_port,
         on_settings_save=handle_settings_save
     )
     
