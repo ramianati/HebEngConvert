@@ -7,6 +7,8 @@ import os
 import sys
 import time
 
+from pynput import keyboard
+
 # Global app instance for single-instance control
 app = None
 icon = None
@@ -30,11 +32,11 @@ def show_clipboard():
         try:
             content = pyperclip.paste()
             if not content:
-                content = "[Clipboard is empty or contains non-text data]"
+                content = "[No text found]"
         except Exception as e:
-            content = f"Error reading clipboard: {e}"
+            content = f"Error: {e}"
         
-        # Use after() to ensure thread safety if called from pystray thread
+        # Use after() to ensure thread safety if called from background threads
         app.after(0, lambda: app.show(content))
 
 def exit_app():
@@ -55,28 +57,38 @@ def setup_tray():
         pystray.MenuItem("Exit", on_tray_clicked)
     )
     
-    icon = pystray.Icon("HebEngConvert", image, "Clipboard Monitor", menu)
+    icon = pystray.Icon("HebEngConvert", image, "HebEngConvert", menu)
     icon.run()
+
+def setup_hotkey():
+    """ Setup global hotkey Ctrl+Alt+D """
+    # Hotkey definition: <ctrl>+<alt>+d
+    with keyboard.GlobalHotKeys({
+        '<ctrl>+<alt>+d': show_clipboard
+    }) as h:
+        h.join()
 
 def refresh_callback():
     """ Called from the GUI refresh button """
     try:
         content = pyperclip.paste()
         if not content:
-            content = "[Clipboard is empty or contains non-text data]"
+            content = "[No text found]"
     except Exception as e:
-        content = f"Error reading clipboard: {e}"
+        content = f"Error: {e}"
     
     if app:
         app.update_content(content)
 
 if __name__ == "__main__":
-    # 1. Initialize GUI in a way that it starts hidden
+    # 1. Initialize GUI
     app = ClipboardWindow(on_refresh_callback=refresh_callback)
     
-    # 2. Start tray icon in a background thread
-    tray_thread = threading.Thread(target=setup_tray, daemon=True)
-    tray_thread.start()
+    # 2. Start hotkey listener in background
+    threading.Thread(target=setup_hotkey, daemon=True).start()
     
-    # 3. Main thread runs the GUI event loop
+    # 3. Start tray icon in background
+    threading.Thread(target=setup_tray, daemon=True).start()
+    
+    # 4. Main thread runs the GUI
     app.mainloop()

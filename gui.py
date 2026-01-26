@@ -18,7 +18,7 @@ class ClipboardWindow(ctk.CTk):
         super().__init__()
 
         self.title("HebEngConvert")
-        self.geometry("300x320")
+        self.geometry("300x170")
         self.on_refresh_callback = on_refresh_callback
         
         # Load copy icon
@@ -26,7 +26,7 @@ class ClipboardWindow(ctk.CTk):
         self.copy_image = ctk.CTkImage(
             light_image=Image.open(icon_path),
             dark_image=Image.open(icon_path),
-            size=(20, 20)
+            size=(24, 24)
         )
         
         # Configure grid
@@ -35,46 +35,56 @@ class ClipboardWindow(ctk.CTk):
 
         # Main frame
         self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.main_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.main_frame.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
         self.main_frame.grid_rowconfigure((0, 1), weight=1) 
         self.main_frame.grid_columnconfigure(0, weight=1)
 
         # --- Hebrew View Section ---
         self.heb_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.heb_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 5))
+        self.heb_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 2))
         self.heb_frame.grid_rowconfigure(0, weight=1)
         self.heb_frame.grid_columnconfigure(0, weight=1)
 
-        self.heb_textbox = ctk.CTkTextbox(self.heb_frame, wrap="word", font=("Inter", 16))
+        self.heb_textbox = ctk.CTkTextbox(self.heb_frame, wrap="word", font=("Inter", 15), height=45)
         self.heb_textbox.grid(row=0, column=0, sticky="nsew")
         
         self.heb_copy_btn = ctk.CTkButton(
-            self.heb_frame, text="", image=self.copy_image, width=35, height=35,
+            self.heb_frame, text="", image=self.copy_image, width=32, height=32,
+            fg_color="transparent", hover_color=("#ebebeb", "#2b2b2b"),
             command=lambda: self.copy_to_clip(self.heb_textbox.get("0.0", "end-1c"))
         )
-        self.heb_copy_btn.grid(row=0, column=1, padx=(5, 0), sticky="ns")
+        self.heb_copy_btn.grid(row=0, column=1, padx=(4, 0), sticky="ns")
 
         # --- English View Section ---
         self.eng_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.eng_frame.grid(row=1, column=0, sticky="nsew", pady=(5, 0))
+        self.eng_frame.grid(row=1, column=0, sticky="nsew", pady=(2, 0))
         self.eng_frame.grid_rowconfigure(0, weight=1)
         self.eng_frame.grid_columnconfigure(0, weight=1)
 
-        self.eng_textbox = ctk.CTkTextbox(self.eng_frame, wrap="word", font=("Inter", 14))
+        self.eng_textbox = ctk.CTkTextbox(self.eng_frame, wrap="word", font=("Inter", 13), height=45)
         self.eng_textbox.grid(row=0, column=0, sticky="nsew")
         
         self.eng_copy_btn = ctk.CTkButton(
-            self.eng_frame, text="", image=self.copy_image, width=35, height=35,
+            self.eng_frame, text="", image=self.copy_image, width=32, height=32,
+            fg_color="transparent", hover_color=("#ebebeb", "#2b2b2b"),
             command=lambda: self.copy_to_clip(self.eng_textbox.get("0.0", "end-1c"))
         )
-        self.eng_copy_btn.grid(row=0, column=1, padx=(5, 0), sticky="ns")
+        self.eng_copy_btn.grid(row=0, column=1, padx=(4, 0), sticky="ns")
 
         # --- Bottom Control Section ---
-        self.refresh_button = ctk.CTkButton(
-            self.main_frame, text="Refresh Clipboard", 
-            command=self.refresh_content, height=30, font=("Inter", 12, "bold")
+        icon_refresh_path = get_resource_path("assets/refresh.png")
+        self.refresh_image = ctk.CTkImage(
+            light_image=Image.open(icon_refresh_path),
+            dark_image=Image.open(icon_refresh_path),
+            size=(24, 24)
         )
-        self.refresh_button.grid(row=2, column=0, pady=(10, 0), sticky="ew")
+        
+        self.refresh_button = ctk.CTkButton(
+            self.main_frame, text="", image=self.refresh_image, 
+            command=self.refresh_content, width=32, height=32,
+            fg_color="transparent", hover_color=("#ebebeb", "#2b2b2b")
+        )
+        self.refresh_button.grid(row=2, column=0, pady=(2, 0))
         
         # Close handling (hide instead of destroy)
         self.protocol("WM_DELETE_WINDOW", self.hide)
