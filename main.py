@@ -74,8 +74,11 @@ def setup_tray(hotkey_str):
     icon_path = get_resource_path("assets/clipboard.png")
     image = Image.open(icon_path)
     
+    # Format clean hotkey for menu and notification
+    clean_hk = hotkey_str.replace("<", "").replace(">", "").upper()
+    
     menu = pystray.Menu(
-        pystray.MenuItem("Open", on_tray_clicked, default=True),
+        pystray.MenuItem(f"Open ({clean_hk})", on_tray_clicked, default=True),
         pystray.MenuItem("Exit", on_tray_clicked)
     )
     
@@ -84,8 +87,7 @@ def setup_tray(hotkey_str):
     threading.Thread(target=icon.run, daemon=True).start()
     
     time.sleep(1.5)
-    display_hk = hotkey_str.replace("<", "").replace(">", "").upper()
-    icon.notify(f"Press {display_hk} to open.", "HebEngConvert is Ready")
+    icon.notify(f"Press {clean_hk} to open.", "HebEngConvert is Ready")
 
 def update_hotkey_listener(new_hotkey):
     global hotkey_listener
@@ -105,6 +107,7 @@ def update_hotkey_listener(new_hotkey):
         print(f"Hotkey Error: {e}")
 
 def handle_settings_save(new_hotkey, new_port, use_port):
+    global icon
     config = load_config()
     config["hotkey"] = new_hotkey
     config["port"] = new_port
@@ -113,6 +116,15 @@ def handle_settings_save(new_hotkey, new_port, use_port):
     
     update_hotkey_listener(new_hotkey)
     
+    # Update Tray Menu Text
+    if icon:
+        clean_hk = new_hotkey.replace("<", "").replace(">", "").upper()
+        new_menu = pystray.Menu(
+            pystray.MenuItem(f"Open ({clean_hk})", on_tray_clicked, default=True),
+            pystray.MenuItem("Exit", on_tray_clicked)
+        )
+        icon.menu = new_menu
+
     if app:
         app.current_hotkey = new_hotkey
         app.current_port = new_port

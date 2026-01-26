@@ -17,7 +17,7 @@ class SettingsDialog(ctk.CTkToplevel):
     def __init__(self, parent, current_hotkey, current_port, use_port, on_save_callback):
         super().__init__(parent)
         self.title("HebEngConvert")
-        self.geometry("380x280")
+        self.geometry("380x310")
         self.on_save_callback = on_save_callback
         self.is_capturing = False
         self.captured_keys = set()
@@ -37,6 +37,18 @@ class SettingsDialog(ctk.CTkToplevel):
         ctk.CTkLabel(self.info_frame, text="HebEngConvert", font=title_font).grid(row=0, column=0, sticky="w")
         ctk.CTkLabel(self.info_frame, text=f"v1.0.2", font=info_font).grid(row=0, column=1, sticky="w", padx=10)
         
+        # GitHub Link
+        import webbrowser
+        self.github_link = ctk.CTkLabel(
+            self.info_frame, 
+            text="GitHub Repository", 
+            font=("Inter", 11, "underline"), 
+            text_color="#448AFF", 
+            cursor="hand2"
+        )
+        self.github_link.grid(row=1, column=0, columnspan=2, sticky="w", pady=(0, 5))
+        self.github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/ramianati/HebEngConvert"))
+
         folder_text = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
         folder_label = ctk.CTkLabel(self, text=folder_text, font=("Inter", 9), wraplength=340, justify="left")
         folder_label.pack(padx=20, pady=(0, 10), anchor="w")
