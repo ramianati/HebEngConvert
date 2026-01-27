@@ -10,15 +10,23 @@ import time
 from pynput import keyboard
 
 import json
+from platform_utils import (
+    get_default_hotkey,
+    get_config_path,
+    get_modifier_keys,
+    format_hotkey_display,
+    is_mac,
+    is_windows
+)
 
 # Global app instance for single-instance control
 app = None
 icon = None
 hotkey_listener = None
-config_path = os.path.join(os.path.expanduser("~"), ".hebengconvert.json")
+config_path = get_config_path()
 
 def load_config():
-    default_config = {"hotkey": "<ctrl>+<alt>+d", "port": 54321, "use_port": True}
+    default_config = {"hotkey": get_default_hotkey(), "port": 54321, "use_port": True}
     if os.path.exists(config_path):
         try:
             with open(config_path, "r") as f:
@@ -74,7 +82,7 @@ def setup_tray(hotkey_str):
     icon_path = get_resource_path("assets/clipboard.png")
     image = Image.open(icon_path)
     
-    clean_hk = hotkey_str.replace("<", "").replace(">", "").upper()
+    clean_hk = format_hotkey_display(hotkey_str)
     
     # Create the menu
     menu = pystray.Menu(
@@ -97,14 +105,34 @@ def update_hotkey_listener(new_hotkey):
         hotkey_listener.stop()
     
     try:
-        hk = new_hotkey.lower().strip()
-        for key in ['ctrl', 'alt', 'shift', 'win', 'cmd']:
-            if key in hk and f'<{key}>' not in hk:
-                hk = hk.replace(key, f'<{key}>')
-        hk = hk.replace(" ", "").replace(",", "+")
-        
-        hotkey_listener = keyboard.GlobalHotKeys({hk: show_clipboard})
-        hotkey_listener.start()
+        if is_mac():
+            # Use macOS-specific hotkey listener
+            from hotkey_listener_mac import HotkeyListenerMac
+            
+            # Parse hotkey string into tuple format
+            # e.g., "<cmd>+<shift>+d" -> ('<cmd>', '<shift>', 'd')
+            hk = new_hotkey.lower().strip()
+            modifier_keys = get_modifier_keys()
+            for key in modifier_keys:
+                if key in hk and f'<{key}>' not in hk:
+                    hk = hk.replace(key, f'<{key}>')
+            hk = hk.replace(" ", "").replace(",", "+")
+            
+            # Split into tuple
+            hotkey_parts = tuple(hk.split('+'))
+            hotkey_listener = HotkeyListenerMac(hotkey_parts, show_clipboard)
+            hotkey_listener.start()
+        else:
+            # Use pynput GlobalHotKeys for Windows/Linux
+            hk = new_hotkey.lower().strip()
+            modifier_keys = get_modifier_keys()
+            for key in modifier_keys:
+                if key in hk and f'<{key}>' not in hk:
+                    hk = hk.replace(key, f'<{key}>')
+            hk = hk.replace(" ", "").replace(",", "+")
+            
+            hotkey_listener = keyboard.GlobalHotKeys({hk: show_clipboard})
+            hotkey_listener.start()
     except Exception as e:
         print(f"Hotkey Error: {e}")
 
@@ -120,7 +148,7 @@ def handle_settings_save(new_hotkey, new_port, use_port):
     
     # Update Tray Menu Text
     if icon:
-        clean_hk = new_hotkey.replace("<", "").replace(">", "").upper()
+        clean_hk = format_hotkey_display(new_hotkey)
         new_menu = pystray.Menu(
             pystray.MenuItem(f"Open ({clean_hk})", on_tray_clicked, default=True),
             pystray.MenuItem("Exit", on_tray_clicked)

@@ -4,6 +4,7 @@ import os
 import sys
 from PIL import Image
 from converter import convert_eng_to_heb, convert_heb_to_eng
+from platform_utils import get_modifier_keys, format_hotkey_display
 
 def get_resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -121,7 +122,8 @@ class SettingsDialog(ctk.CTkToplevel):
         
         if k_str:
             self.captured_keys.add(k_str)
-            mods_list = [k for k in self.captured_keys if k in ['ctrl', 'alt', 'shift', 'win', 'cmd']]
+            modifier_keys = get_modifier_keys()
+            mods_list = [k for k in self.captured_keys if k in modifier_keys]
             others = sorted([k for k in self.captured_keys if k not in mods_list])
             current_str = "+".join(sorted(mods_list) + others)
             self.hotkey_entry.delete(0, "end")
@@ -129,7 +131,8 @@ class SettingsDialog(ctk.CTkToplevel):
 
     def _on_key_release(self, key):
         if not self.is_capturing: return
-        has_non_mod = any(k not in ['ctrl', 'alt', 'shift', 'win', 'cmd'] for k in self.captured_keys)
+        modifier_keys = get_modifier_keys()
+        has_non_mod = any(k not in modifier_keys for k in self.captured_keys)
         if has_non_mod:
             self.after(600, self._stop_capture)
 
@@ -162,7 +165,8 @@ class SettingsDialog(ctk.CTkToplevel):
                     return
                     
                 save_hk = new_hotkey_raw
-                for key in ['ctrl', 'alt', 'shift', 'win', 'cmd']:
+                modifier_keys = get_modifier_keys()
+                for key in modifier_keys:
                     if key in save_hk and f'<{key}>' not in save_hk:
                         save_hk = save_hk.replace(key, f'<{key}>')
                 
