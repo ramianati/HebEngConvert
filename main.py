@@ -54,6 +54,8 @@ def on_tray_clicked(icon, item):
     text = str(item)
     if text.startswith("Open"):
         show_clipboard()
+    elif text == "Help":
+        show_help()
     elif text == "Exit":
         exit_app()
 
@@ -66,6 +68,11 @@ def show_clipboard():
         except Exception as e:
             content = f"Error: {e}"
         app.after(0, lambda: app.show(content))
+
+def show_help():
+    if app:
+        app.after(0, app.open_help)
+        app.after(10, app.show) # Focus the window so help dialog is visible
 
 def exit_app():
     global icon, app, hotkey_listener
@@ -87,6 +94,7 @@ def setup_tray(hotkey_str):
     # Create the menu
     menu = pystray.Menu(
         pystray.MenuItem(f"Open ({clean_hk})", on_tray_clicked, default=True),
+        pystray.MenuItem("Help", on_tray_clicked),
         pystray.MenuItem("Exit", on_tray_clicked)
     )
     
@@ -151,6 +159,7 @@ def handle_settings_save(new_hotkey, new_port, use_port):
         clean_hk = format_hotkey_display(new_hotkey)
         new_menu = pystray.Menu(
             pystray.MenuItem(f"Open ({clean_hk})", on_tray_clicked, default=True),
+            pystray.MenuItem("Help", on_tray_clicked),
             pystray.MenuItem("Exit", on_tray_clicked)
         )
         icon.menu = new_menu

@@ -175,12 +175,65 @@ class SettingsDialog(ctk.CTkToplevel):
             except ValueError:
                 self.status_label.configure(text="Error: Port must be a number", text_color="red")
 
+class HelpDialog(ctk.CTkToplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("How to Use HebEngConvert")
+        self.geometry("400x380")
+        
+        # Center the dialog
+        self.after(10, self._center_window)
+        
+        # UI Elements
+        title_font = ("Inter", 16, "bold")
+        header_font = ("Inter", 13, "bold")
+        text_font = ("Inter", 11)
+        
+        self.main_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        self.main_frame.pack(padx=20, pady=20, fill="both", expand=True)
+        
+        ctk.CTkLabel(self.main_frame, text="Quick Guide", font=title_font).pack(pady=(0, 15), anchor="w")
+        
+        steps = [
+            ("1. Copy Text", "Copy any English or Hebrew text to your clipboard."),
+            ("2. Press Hotkey", "Default: CTRL+ALT+D (Windows) or CMD+SHIFT+D (Mac)."),
+            ("3. Instant Conversion", "The window pops up with both layouts converted."),
+            ("4. Copy Result", "Click the large clipboard icon to copy the desired fix.")
+        ]
+        
+        for title, desc in steps:
+            ctk.CTkLabel(self.main_frame, text=title, font=header_font, text_color="#AA00FF").pack(pady=(5, 0), anchor="w")
+            ctk.CTkLabel(self.main_frame, text=desc, font=text_font, wraplength=340, justify="left").pack(pady=(0, 10), anchor="w")
+            
+        ctk.CTkLabel(self.main_frame, text="Tips", font=header_font).pack(pady=(10, 5), anchor="w")
+        tips = [
+            "• Use the 'Refresh' button (or the hotkey) to pull new clipboard content without re-opening manually.",
+            "• Customize the hotkey in Settings if the default conflicts with other apps.",
+            "• The app runs in the system tray for quick access."
+        ]
+        for tip in tips:
+            ctk.CTkLabel(self.main_frame, text=tip, font=text_font, wraplength=340, justify="left").pack(pady=2, anchor="w")
+            
+        self.close_btn = ctk.CTkButton(self, text="Got it!", command=self.destroy)
+        self.close_btn.pack(pady=15)
+        
+        self.attributes('-topmost', True)
+        self.grab_set()
+
+    def _center_window(self):
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
+
 class ClipboardWindow(ctk.CTk):
     def __init__(self, on_refresh_callback=None, current_hotkey="ctrl+alt+d", current_port=54321, use_port=True, on_settings_save=None):
         super().__init__()
 
         self.title("HebEngConvert")
-        self.geometry("300x220")
+        self.geometry("320x220")
         self.on_refresh_callback = on_refresh_callback
         self.current_hotkey = current_hotkey
         self.current_port = current_port
@@ -256,11 +309,13 @@ class ClipboardWindow(ctk.CTk):
         # --- Bottom Control Section ---
         self.control_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.control_frame.grid(row=2, column=0, pady=(6, 0), sticky="ew")
-        self.control_frame.grid_columnconfigure((0, 1), weight=1)
+        self.control_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
         self.refresh_button = ctk.CTkButton(
-            self.control_frame, text="", image=self.refresh_image, 
-            command=self.refresh_content, width=40, height=40,
+            self.control_frame, text="Refresh", image=self.refresh_image, 
+            command=self.refresh_content, height=40,
+            compound="left", font=("Inter", 12, "bold"),
+            text_color="#AA00FF",
             fg_color=("#f0f0f0", "#333333"), hover_color=("#e5e5e5", "#404040"),
             corner_radius=8
         )
@@ -274,12 +329,25 @@ class ClipboardWindow(ctk.CTk):
         )
         self.settings_button.grid(row=0, column=1, sticky="w", padx=4)
         
+        self.help_button = ctk.CTkButton(
+            self.control_frame, text="?", 
+            command=self.open_help, width=40, height=40,
+            font=("Inter", 16, "bold"),
+            text_color="#AA00FF",
+            fg_color=("#f0f0f0", "#333333"), hover_color=("#e5e5e5", "#404040"),
+            corner_radius=8
+        )
+        self.help_button.grid(row=0, column=2, sticky="w", padx=4)
+        
         # Close handling
         self.protocol("WM_DELETE_WINDOW", self.hide)
         self.withdraw()
 
     def open_settings(self):
         SettingsDialog(self, self.current_hotkey, self.current_port, self.use_port, self._on_settings_applied)
+
+    def open_help(self):
+        HelpDialog(self)
 
     def _on_settings_applied(self, new_hotkey, new_port, use_port):
         self.current_hotkey = new_hotkey
