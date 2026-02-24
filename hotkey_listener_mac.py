@@ -45,7 +45,8 @@ class HotkeyListenerMac:
         elif hasattr(key, 'name'):
             return key.name.lower()
         else:
-            return str(key).lower().replace("'<", "").replace(">'", "")
+            # Fallback for special keys: str(key) looks like "Key.cmd" or "'a'"
+            return str(key).lower().strip("'").replace("key.", "")
     
     def _is_modifier_pressed(self, modifier):
         """Check if a specific modifier is currently pressed."""
@@ -92,12 +93,21 @@ class HotkeyListenerMac:
     def start(self):
         """Start listening for the hotkey."""
         if self.listener is None or not self.listener.running:
-            self.listener = keyboard.Listener(
-                on_press=self._on_press,
-                on_release=self._on_release
-            )
-            self.listener.start()
-            logger.info("Hotkey listener started")
+            try:
+                self.listener = keyboard.Listener(
+                    on_press=self._on_press,
+                    on_release=self._on_release
+                )
+                self.listener.start()
+                logger.info("Hotkey listener started")
+            except Exception as e:
+                # On macOS this can fail if Accessibility permissions are not granted.
+                # The app should still launch — just without the global hotkey.
+                logger.warning(
+                    f"Could not start hotkey listener: {e}. "
+                    "On macOS, grant Accessibility permission in "
+                    "System Settings → Privacy & Security → Accessibility."
+                )
     
     def stop(self):
         """Stop listening for the hotkey."""

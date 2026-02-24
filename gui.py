@@ -36,7 +36,7 @@ class SettingsDialog(ctk.CTkToplevel):
         self.info_frame.pack(padx=20, pady=(15, 5), fill="x")
         
         ctk.CTkLabel(self.info_frame, text="HebEngConvert", font=title_font).grid(row=0, column=0, sticky="w")
-        ctk.CTkLabel(self.info_frame, text=f"v1.0.2", font=info_font).grid(row=0, column=1, sticky="w", padx=10)
+        ctk.CTkLabel(self.info_frame, text=f"v1.0.3", font=info_font).grid(row=0, column=1, sticky="w", padx=10)
         
         # GitHub Link
         import webbrowser

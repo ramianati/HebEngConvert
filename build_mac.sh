@@ -24,17 +24,18 @@ pip install -q pyinstaller pystray pillow pyperclip customtkinter pynput
 echo "Creating .app bundle..."
 pyinstaller --clean \
     --windowed \
-    --onefile \
     --name "HebEngConvert" \
     --icon="assets/clipboard.png" \
     --add-data "assets:assets" \
     --hidden-import="PIL._tkinter_finder" \
     --hidden-import="customtkinter" \
+    --hidden-import="pynput.keyboard" \
+    --hidden-import="pynput.mouse" \
     --osx-bundle-identifier="com.hebengconvert.app" \
     main.py
 
 # Check if build succeeded
-if [ -f "dist/HebEngConvert.app/Contents/MacOS/HebEngConvert" ]; then
+if [ -d "dist/HebEngConvert.app" ]; then
     echo "✓ Build successful!"
     echo "Application bundle: dist/HebEngConvert.app"
     echo ""
@@ -43,6 +44,11 @@ if [ -f "dist/HebEngConvert.app/Contents/MacOS/HebEngConvert" ]; then
     echo ""
     echo "To run:"
     echo "  open dist/HebEngConvert.app"
+    echo ""
+    echo "NOTE: On first launch, macOS may require Accessibility permission"
+    echo "for the global hotkey to work. Go to:"
+    echo "  System Settings → Privacy & Security → Accessibility"
+    echo "  and enable HebEngConvert."
 else
     echo "✗ Build failed!"
     exit 1

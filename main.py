@@ -5,7 +5,6 @@ import threading
 from gui import ClipboardWindow
 import os
 import sys
-import time
 
 from pynput import keyboard
 
@@ -84,6 +83,14 @@ def exit_app():
         app.quit()
     sys.exit(0)
 
+def _safe_notify(clean_hk):
+    """Send a tray notification if supported by the platform."""
+    try:
+        if icon:
+            icon.notify(f"Press {clean_hk} to open.", "HebEngConvert is Ready")
+    except Exception:
+        pass  # Notifications may not be available on all macOS configurations
+
 def setup_tray(hotkey_str):
     global icon
     icon_path = get_resource_path("assets/clipboard.png")
@@ -100,12 +107,15 @@ def setup_tray(hotkey_str):
     
     icon = pystray.Icon("HebEngConvert", image, "HebEngConvert", menu)
     
-    # Ensure double-click/primary action is explicitly tied to Open
-    # icon.run() handles this via menu.default=True for Windows
-    threading.Thread(target=icon.run, daemon=True).start()
+    # run_detached() integrates with the OS event loop without requiring the
+    # main thread — critical on macOS where Cocoa/AppKit must own the main thread.
+    # On Windows it falls back to a regular background thread automatically.
+    icon.run_detached()
     
-    time.sleep(1.5)
-    icon.notify(f"Press {clean_hk} to open.", "HebEngConvert is Ready")
+    # Schedule the startup notification via the Tkinter event loop so it fires
+    # after the GUI is ready, avoiding a race with the tray initialization.
+    if app:
+        app.after(1500, lambda: _safe_notify(clean_hk))
 
 def update_hotkey_listener(new_hotkey):
     global hotkey_listener
